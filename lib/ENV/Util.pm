@@ -36,13 +36,16 @@ sub load_dotenv {
     my @lines;
     { local $!; @lines = <$fh> }
     my %env;
+    # POSIX convention for env variable names:
+    my $varname_re = qr/[a-zA-Z_][a-zA-Z0-9_]+/;
     foreach my $line (@lines) {
         # code heavily inspired by Dotenv.pm (BooK++)
         if (my ($k, $v) = $line =~ m{
             \A\s*
-            (?: export \s+ )?           # the 'export' keyword is optional
-            ( [a-zA-Z_][a-zA-Z0-9_]+ )  # POSIX convention for env variable names
-            (?: \s* = \s* )
+            # 'export' (bash), 'set'/'setenv' ([t]csh) are optional keywords:
+            (?: (?:export|set|setenv) \s+ )?
+            ( $varname_re )
+            (?: \s* (?:=|\s+) \s* )       # separator is '=' or spaces
             (
               '[^']*(?:\\'|[^']*)*'  # single quoted value
              |"[^"]*(?:\\"|[^"]*)*"  # or double quoted value

@@ -57,10 +57,23 @@ sub load_dotenv {
             $v = '' unless defined $v;
             $v =~ s/\s*\z//;
 
-            # single and double quotes semantics
-            if ( $v =~ s/\A(['"])(.*)\1\z/$2/ && $1 eq '"' ) {
-                $v =~ s/\\n/\n/g;
-                $v =~ s/\\//g;
+            my $interpolate_vars = 1; # unquoted strings interpolate variables.
+
+            # drops quotes from quoted values, and interpolate if double quoted:
+            if ( $v =~ s/\A(['"])(.*)\1\z/$2/) {
+                if ($1 eq '"' ) {
+                    $v =~ s/\\n/\n/g;
+                    $v =~ s/\\//g;
+                }
+                else {
+                    $interpolate_vars = 0;
+                }
+            }
+
+            if ($interpolate_vars) {
+                # $env{$1} could point to a variable that doesn't exist.
+                no warnings 'uninitialized';
+                $v =~ s{\$($varname_re)}{exists $ENV{$1} ? $ENV{$1} : $env{$1}}ge;
             }
             $env{$k} = $v;
         }

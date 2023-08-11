@@ -126,7 +126,7 @@ ENV::Util - parse prefixed environment variables and dotnev (.env) files into Pe
 
 =head1 SYNOPSIS
 
-Efficiently load a '.env' file into %ENV:
+Efficiently load an L<'.env'|/"The .env file format"> file into %ENV:
 
     use ENV::Util -load_dotenv;
 
@@ -186,6 +186,43 @@ B<NOTE:> because loading a C<.env> file is so common for apps running in
 containers, we added a shortcut that loads it directly at compile time:
 
     use ENV::Util -load_dotenv;
+
+=head3 The .env file format
+
+Despite being almost ubiquitous in containerized environments, there is no
+standard format for "dotenv", and each implementation does its own thing.
+
+This is ours:
+
+    # comments can be standalone or inline.
+    # blank lines are also accepted.
+
+    # variable names must follow the pattern [A-Za-z_][a-zA-Z0-9_]+
+    # but usually are just A..Z in all caps.
+    FOO  =  some value   # spaces are trimmed except inside the string.
+    FOO='some value'     # so both lines here are the same.
+
+    NEWLINE=\n           # unquoted values are treated WITH interpolation.
+    NEWLINE="\n"         # so this line and the one above are the same.
+    LITERAL='\n'         # but this is a literal '\' and a literal 'n'.
+
+    BAR=baz          # bash/zsh format.
+    export BAR=baz   # bash format.
+    set BAR=baz      # tcsh/csh format.
+    setenv BAR baz   # tcsh/csh format (note this one lacks '=').
+
+    # empty values are set to the empty string ''
+    NONE =
+    ALSONONE
+
+    # you can prepend '$' to variable names to interpolate them
+    # in unquoted or double quoted values. You can point to variables
+    # declared before in the file or available in your %ENV
+    # *AS LONG AS* you don't try to replace variables from %ENV,
+    # which is not allowed by design.
+    MYKEY=$OTHERKEY
+    MYKEY=$MYKEY and something else  # ok to use the same variable.
+
 
 =head2 redacted_env()
 

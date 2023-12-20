@@ -122,7 +122,7 @@ __END__
 
 =head1 NAME
 
-ENV::Util - parse prefixed environment variables and dotnev (.env) files into Perl
+ENV::Util - parse prefixed environment variables and dotenv (.env) files into Perl
 
 =head1 SYNOPSIS
 
